@@ -54,8 +54,14 @@ steps:
         from_secret: jwt_secret
       GOOGLE_CLIENT_SECRET:
         from_secret: google_client_secret
+      NEXT_PUBLIC_API_URL:
+        from_secret: next_public_api_url
+      AUTH_URL:
+        from_secret: auth_url
+      AUTH_SECRET:
+        from_secret: auth_secret
     commands:
-      - docker compose up -d --build --no-deps frontend
+      - docker compose up -d --build --no-deps web
       - docker image prune -f
     when:
       branch: main
