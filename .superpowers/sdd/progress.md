@@ -3,7 +3,7 @@
 ## Phase 1: Backend Scaffolding (2 days)
 - [x] Task 1.1: Initialize Go backend project structure
 - [x] Task 1.2: Set up PostgreSQL migrations (golang-migrate)
-- [ ] Task 1.3: Set up sqlc for type-safe queries
+- [x] Task 1.3: Set up sqlc for type-safe queries (v1.31.1)
 - [x] Task 1.4: Set up middleware and auth service skeleton
 
 ## Phase 2: Frontend Setup (1 day)
@@ -43,3 +43,6 @@ Task 1.1: complete (commits df3f9fd..0f279c4, review clean)
 Task 1.2: complete (commit 47895e6, review clean)
 Task 2.1: complete (commit 2893f7d, Next.js 16, review clean)
 Task 1.4: complete (commit 9c96163, build clean)
+Task 1.3: complete (commit 709003d, sqlc v1.31.1, pgx/v5)
+
+Phase 1 DONE — all 4 tasks complete
