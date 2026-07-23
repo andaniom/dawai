@@ -1,0 +1,8 @@
+# DAWAI Automated Backups
+#
+# Add to crontab:  crontab -e
+#
+# Daily backup at 2:00 AM (server time)
+# Adjust BACKUP_DIR, CONTAINER, DB_USER if different on VPS.
+
+0 2 * * * /opt/dawai/scripts/db-backup.sh >> /var/log/dawai-backup.log 2>&1
