@@ -1,0 +1,12 @@
+DROP TABLE IF EXISTS assessment_components;
+DROP TABLE IF EXISTS assessments;
+DROP TABLE IF EXISTS rubric_components;
+DROP TABLE IF EXISTS subjects;
+DROP TABLE IF EXISTS parent_students;
+DROP TABLE IF EXISTS students;
+DROP TABLE IF EXISTS user_schools;
+DROP TABLE IF EXISTS user_roles;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS schools;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS jwt_blacklist;
