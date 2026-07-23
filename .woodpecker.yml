@@ -9,9 +9,10 @@ steps:
   # BACKEND (Go)
   # -------------------------------------------------------
   test-backend:
-    image: golang:1.21-alpine
+    image: golang:1.25-alpine
     commands:
       - cd backend
+      - go vet ./...
       - go test ./...
     when:
       path:
@@ -25,7 +26,7 @@ steps:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      DB_PASSWORD:
+      POSTGRES_PASSWORD:
         from_secret: db_password
       JWT_SECRET:
         from_secret: jwt_secret
@@ -34,7 +35,7 @@ steps:
       GOOGLE_CLIENT_SECRET:
         from_secret: google_client_secret
     commands:
-      - docker compose up -d --build --no-deps backend
+      - docker compose up -d --build --no-deps api
       - docker image prune -f
     when:
       branch: main
