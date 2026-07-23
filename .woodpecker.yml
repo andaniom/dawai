@@ -1,0 +1,94 @@
+# .woodpecker.yml
+
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+
+steps:
+  # -------------------------------------------------------
+  # BACKEND (Go)
+  # -------------------------------------------------------
+  test-backend:
+    image: golang:1.21-alpine
+    commands:
+      - cd backend
+      - go test ./...
+    when:
+      path:
+        include: [ 'backend/**' ]
+      event:
+        - push
+        - pull_request
+
+  deploy-backend:
+    image: docker:cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      DB_PASSWORD:
+        from_secret: db_password
+      JWT_SECRET:
+        from_secret: jwt_secret
+      SMTP_PASS:
+        from_secret: smtp_pass
+      GOOGLE_CLIENT_SECRET:
+        from_secret: google_client_secret
+    commands:
+      - docker compose up -d --build --no-deps backend
+      - docker image prune -f
+    when:
+      branch: main
+      path:
+        include: [ 'backend/**' ]
+
+  # -------------------------------------------------------
+  # FRONTEND (Next.js + NextAuth)
+  # -------------------------------------------------------
+  deploy-frontend:
+    image: docker:cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      JWT_SECRET:
+        from_secret: jwt_secret
+      GOOGLE_CLIENT_SECRET:
+        from_secret: google_client_secret
+    commands:
+      - docker compose up -d --build --no-deps frontend
+      - docker image prune -f
+    when:
+      branch: main
+      path:
+        include: [ 'frontend/**' ]
+
+  # -------------------------------------------------------
+  # NOTIFICATIONS
+  # -------------------------------------------------------
+  notify-telegram:
+    image: appleboy/drone-telegram
+    secrets: [ telegram_token, telegram_to ]
+    settings:
+      token:
+        from_secret: telegram_token
+      to:
+        from_secret: telegram_to
+      format: markdown
+      message: |
+        {{#success build.status}}
+        ✅ **Deploy Success**
+        {{else}}
+        ❌ **Deploy Failed**
+        {{/success}}
+
+        🚀 **Repo:** {{repo.name}}
+        🔢 **Build:** #{{build.number}} ({{build.event}})
+        ⏱️ **Duration:** {{since build.started}}
+        🌿 **Branch:** {{commit.branch}}
+        📝 **Commit:** {{commit.message}}
+        🔗 **Link:** [{{commit.sha}}]({{commit.link}})
+        👤 **Author:** {{commit.author}}
+
+        [View Build Log]({{build.link}})
+    when:
+      status: [ success, failure ]
+      branch: main
