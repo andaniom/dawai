@@ -1,7 +1,7 @@
 # DAWAI Rewrite Progress Ledger
 
 ## Phase 1: Backend Scaffolding (2 days)
-- [ ] Task 1.1: Initialize Go backend project structure
+- [x] Task 1.1: Initialize Go backend project structure
 - [ ] Task 1.2: Set up PostgreSQL migrations (golang-migrate)
 - [ ] Task 1.3: Set up sqlc for type-safe queries
 - [ ] Task 1.4: Set up middleware and auth service skeleton
@@ -38,3 +38,5 @@
 
 ## Completed Tasks
 (none yet)
+---
+Task 1.1: complete (commits df3f9fd..0f279c4, review clean)
