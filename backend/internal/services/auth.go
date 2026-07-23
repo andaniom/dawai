@@ -39,10 +39,11 @@ type LoginResult struct {
 
 // LoginUser is the user shape returned by auth operations.
 type LoginUser struct {
-	ID    string   `json:"id"`
-	Email string   `json:"email"`
-	Name  string   `json:"name"`
-	Roles []string `json:"roles"`
+	ID       string   `json:"id"`
+	Email    string   `json:"email"`
+	Name     string   `json:"name"`
+	Roles    []string `json:"roles"`
+	SchoolID string   `json:"school_id"`
 }
 
 func (s *AuthService) Login(ctx context.Context, email, password string) (*LoginResult, error) {
@@ -63,6 +64,12 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*Login
 	rolesStr := []string{"teacher"}
 	schoolID := "00000000-0000-0000-0000-000000000000"
 
+	// Fetch first school from user_schools for login
+	schools, err := s.queries.GetUserSchools(ctx, user.ID)
+	if err == nil && len(schools) > 0 {
+		schoolID = schools[0].String()
+	}
+
 	token, err := s.GenerateToken(ctx, user.ID.String(), schoolID, rolesStr)
 	if err != nil {
 		return nil, err
@@ -71,10 +78,11 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*Login
 	return &LoginResult{
 		Token: token,
 		User: LoginUser{
-			ID:    user.ID.String(),
-			Email: user.Email,
-			Name:  user.Name,
-			Roles: rolesStr,
+			ID:       user.ID.String(),
+			Email:    user.Email,
+			Name:     user.Name,
+			Roles:    rolesStr,
+			SchoolID: schoolID,
 		},
 	}, nil
 }

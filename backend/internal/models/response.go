@@ -31,8 +31,9 @@ type LoginResponse struct {
 }
 
 type User struct {
-	ID    string   `json:"id"`
-	Email string   `json:"email"`
-	Name  string   `json:"name"`
-	Roles []string `json:"roles"`
+	ID       string   `json:"id"`
+	Email    string   `json:"email"`
+	Name     string   `json:"name"`
+	Roles    []string `json:"roles"`
+	SchoolID string   `json:"school_id"`
 }

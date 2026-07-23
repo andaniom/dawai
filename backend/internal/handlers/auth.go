@@ -45,10 +45,11 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		Data: models.LoginResponse{
 			AccessToken: result.Token,
 			User: models.User{
-				ID:    result.User.ID,
-				Email: result.User.Email,
-				Name:  result.User.Name,
-				Roles: result.User.Roles,
+				ID:       result.User.ID,
+				Email:    result.User.Email,
+				Name:     result.User.Name,
+				Roles:    result.User.Roles,
+				SchoolID: result.User.SchoolID,
 			},
 		},
 	})

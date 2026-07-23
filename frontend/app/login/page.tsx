@@ -37,7 +37,7 @@ export default function LoginPage() {
     try {
       const res = await apiClient.post<ApiResponse<LoginResponse>>("/api/auth/login", data);
       const { accessToken, user } = res.data.data!;
-      setAuth(user, accessToken, "school_id_placeholder");
+      setAuth(user, accessToken, user.school_id);
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.response?.data?.error?.message || "Login failed");
