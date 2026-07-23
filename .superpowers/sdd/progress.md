@@ -2,7 +2,7 @@
 
 ## Phase 1: Backend Scaffolding (2 days)
 - [x] Task 1.1: Initialize Go backend project structure
-- [ ] Task 1.2: Set up PostgreSQL migrations (golang-migrate)
+- [x] Task 1.2: Set up PostgreSQL migrations (golang-migrate)
 - [ ] Task 1.3: Set up sqlc for type-safe queries
 - [ ] Task 1.4: Set up middleware and auth service skeleton
 
@@ -40,3 +40,4 @@
 (none yet)
 ---
 Task 1.1: complete (commits df3f9fd..0f279c4, review clean)
+Task 1.2: complete (commit 47895e6, review clean)
