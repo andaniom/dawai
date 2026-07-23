@@ -8,7 +8,7 @@
 
 ## Phase 2: Frontend Setup (1 day)
 - [x] Task 2.1: Initialize Next.js project with shadcn/ui
-- [ ] Task 2.2: Create auth store and API client
+- [x] Task 2.2: Create auth store and API client
 
 ## Phase 3: Backend Features (3 days)
 - [ ] Task 3.1: Implement complete auth endpoints with JWT
@@ -46,3 +46,6 @@ Task 1.4: complete (commit 9c96163, build clean)
 Task 1.3: complete (commit 709003d, sqlc v1.31.1, pgx/v5)
 
 Phase 1 DONE — all 4 tasks complete
+Task 2.2: complete (commit 975e945, build clean)
+
+Phase 2 DONE — both tasks complete
