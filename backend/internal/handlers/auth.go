@@ -27,24 +27,46 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	// TODO: Fetch user from database, verify password, issue token
+	result, err := h.authService.Login(c.Context(), req.Email, req.Password)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(models.Response{
+			Success: false,
+			Code:    401,
+			Error: &models.ErrorBody{
+				Message: err.Error(),
+				Type:    "auth_error",
+			},
+		})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(models.Response{
 		Success: true,
 		Code:    200,
 		Data: models.LoginResponse{
-			AccessToken: "placeholder",
+			AccessToken: result.Token,
 			User: models.User{
-				ID:    "user_id",
-				Email: req.Email,
-				Name:  "User Name",
-				Roles: []string{"teacher"},
+				ID:    result.User.ID,
+				Email: result.User.Email,
+				Name:  result.User.Name,
+				Roles: result.User.Roles,
 			},
 		},
 	})
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
-	// TODO: Blacklist JWT
+	jti := c.Locals("jti").(string)
+	if err := h.authService.Logout(c.Context(), jti); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(models.Response{
+			Success: false,
+			Code:    500,
+			Error: &models.ErrorBody{
+				Message: "Failed to blacklist token",
+				Type:    "server_error",
+			},
+		})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(models.Response{
 		Success: true,
 		Code:    200,

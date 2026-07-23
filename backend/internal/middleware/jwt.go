@@ -59,6 +59,7 @@ func JWTGuard(c *fiber.Ctx) error {
 	c.Locals("user_id", claims.Subject)
 	c.Locals("school_id", claims.SchoolID)
 	c.Locals("roles", claims.Roles)
+	c.Locals("jti", claims.ID)
 
 	return c.Next()
 }
