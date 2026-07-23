@@ -12,7 +12,7 @@
 
 ## Phase 3: Backend Features (3 days)
 - [ ] Task 3.1: Implement complete auth endpoints with JWT
-- [ ] Task 3.2: Implement subjects & rubric endpoints
+- [x] Task 3.2: Implement subjects & rubric endpoints
 - [ ] Task 3.3: Implement assessments endpoints
 - [ ] Task 3.4: Implement students & users endpoints
 
@@ -49,3 +49,4 @@ Phase 1 DONE — all 4 tasks complete
 Task 2.2: complete (commit 975e945, build clean)
 
 Phase 2 DONE — both tasks complete
+Task 3.2: complete (subjects.go + subject.go, clean vet)
