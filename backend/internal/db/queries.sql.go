@@ -28,6 +28,17 @@ func (q *Queries) BlacklistJWT(ctx context.Context, arg BlacklistJWTParams) (Jwt
 	return i, err
 }
 
+const countAssessmentsBySubject = `-- name: CountAssessmentsBySubject :one
+SELECT COUNT(*) FROM assessments WHERE subject_id = $1
+`
+
+func (q *Queries) CountAssessmentsBySubject(ctx context.Context, subjectID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countAssessmentsBySubject, subjectID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createAssessment = `-- name: CreateAssessment :one
 INSERT INTO assessments (school_id, subject_id, student_id, teacher_id, feedback)
 VALUES ($1, $2, $3, $4, $5) RETURNING id, school_id, subject_id, student_id, teacher_id, feedback, submitted_at, created_at, updated_at
@@ -222,6 +233,33 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteAssessment = `-- name: DeleteAssessment :exec
+DELETE FROM assessments WHERE id = $1
+`
+
+func (q *Queries) DeleteAssessment(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAssessment, id)
+	return err
+}
+
+const deleteAssessmentComponents = `-- name: DeleteAssessmentComponents :exec
+DELETE FROM assessment_components WHERE assessment_id = $1
+`
+
+func (q *Queries) DeleteAssessmentComponents(ctx context.Context, assessmentID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAssessmentComponents, assessmentID)
+	return err
+}
+
+const deleteSubject = `-- name: DeleteSubject :exec
+DELETE FROM subjects WHERE id = $1
+`
+
+func (q *Queries) DeleteSubject(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteSubject, id)
+	return err
+}
+
 const getAssessmentByID = `-- name: GetAssessmentByID :one
 SELECT id, school_id, subject_id, student_id, teacher_id, feedback, submitted_at, created_at, updated_at FROM assessments WHERE id = $1
 `
@@ -273,6 +311,40 @@ func (q *Queries) GetAssessmentComponents(ctx context.Context, assessmentID pgty
 	return items, nil
 }
 
+const getAssessmentsBySchool = `-- name: GetAssessmentsBySchool :many
+SELECT id, school_id, subject_id, student_id, teacher_id, feedback, submitted_at, created_at, updated_at FROM assessments WHERE school_id = $1 ORDER BY submitted_at DESC
+`
+
+func (q *Queries) GetAssessmentsBySchool(ctx context.Context, schoolID pgtype.UUID) ([]Assessment, error) {
+	rows, err := q.db.Query(ctx, getAssessmentsBySchool, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Assessment
+	for rows.Next() {
+		var i Assessment
+		if err := rows.Scan(
+			&i.ID,
+			&i.SchoolID,
+			&i.SubjectID,
+			&i.StudentID,
+			&i.TeacherID,
+			&i.Feedback,
+			&i.SubmittedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAssessmentsByStudent = `-- name: GetAssessmentsByStudent :many
 SELECT id, school_id, subject_id, student_id, teacher_id, feedback, submitted_at, created_at, updated_at FROM assessments WHERE student_id = $1 ORDER BY submitted_at DESC
 `
@@ -305,6 +377,28 @@ func (q *Queries) GetAssessmentsByStudent(ctx context.Context, studentID pgtype.
 		return nil, err
 	}
 	return items, nil
+}
+
+const getRubricComponentByID = `-- name: GetRubricComponentByID :one
+SELECT id, school_id, subject_id, name, description, scale_min, scale_max, weight, created_at, updated_at FROM rubric_components WHERE id = $1
+`
+
+func (q *Queries) GetRubricComponentByID(ctx context.Context, id pgtype.UUID) (RubricComponent, error) {
+	row := q.db.QueryRow(ctx, getRubricComponentByID, id)
+	var i RubricComponent
+	err := row.Scan(
+		&i.ID,
+		&i.SchoolID,
+		&i.SubjectID,
+		&i.Name,
+		&i.Description,
+		&i.ScaleMin,
+		&i.ScaleMax,
+		&i.Weight,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getRubricComponentsBySubject = `-- name: GetRubricComponentsBySubject :many
@@ -405,6 +499,24 @@ func (q *Queries) GetStudentsBySchool(ctx context.Context, schoolID pgtype.UUID)
 		return nil, err
 	}
 	return items, nil
+}
+
+const getSubjectByID = `-- name: GetSubjectByID :one
+SELECT id, school_id, name, description, created_at, updated_at FROM subjects WHERE id = $1
+`
+
+func (q *Queries) GetSubjectByID(ctx context.Context, id pgtype.UUID) (Subject, error) {
+	row := q.db.QueryRow(ctx, getSubjectByID, id)
+	var i Subject
+	err := row.Scan(
+		&i.ID,
+		&i.SchoolID,
+		&i.Name,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getSubjectsBySchool = `-- name: GetSubjectsBySchool :many
@@ -533,4 +645,18 @@ func (q *Queries) IsJWTBlacklisted(ctx context.Context, jti string) (string, err
 	var jti_2 string
 	err := row.Scan(&jti_2)
 	return jti_2, err
+}
+
+const updateAssessment = `-- name: UpdateAssessment :exec
+UPDATE assessments SET feedback = $2, updated_at = NOW() WHERE id = $1
+`
+
+type UpdateAssessmentParams struct {
+	ID       pgtype.UUID
+	Feedback pgtype.Text
+}
+
+func (q *Queries) UpdateAssessment(ctx context.Context, arg UpdateAssessmentParams) error {
+	_, err := q.db.Exec(ctx, updateAssessment, arg.ID, arg.Feedback)
+	return err
 }

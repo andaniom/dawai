@@ -28,6 +28,15 @@ VALUES ($1, $2, $3) RETURNING *;
 -- name: GetSubjectsBySchool :many
 SELECT * FROM subjects WHERE school_id = $1 ORDER BY name;
 
+-- name: GetSubjectByID :one
+SELECT * FROM subjects WHERE id = $1;
+
+-- name: DeleteSubject :exec
+DELETE FROM subjects WHERE id = $1;
+
+-- name: CountAssessmentsBySubject :one
+SELECT COUNT(*) FROM assessments WHERE subject_id = $1;
+
 -- name: GetRubricComponentsBySubject :many
 SELECT * FROM rubric_components WHERE subject_id = $1 ORDER BY name;
 
@@ -61,6 +70,21 @@ VALUES ($1, $2, $3) RETURNING *;
 
 -- name: GetAssessmentComponents :many
 SELECT * FROM assessment_components WHERE assessment_id = $1;
+
+-- name: GetAssessmentsBySchool :many
+SELECT * FROM assessments WHERE school_id = $1 ORDER BY submitted_at DESC;
+
+-- name: GetRubricComponentByID :one
+SELECT * FROM rubric_components WHERE id = $1;
+
+-- name: UpdateAssessment :exec
+UPDATE assessments SET feedback = $2, updated_at = NOW() WHERE id = $1;
+
+-- name: DeleteAssessment :exec
+DELETE FROM assessments WHERE id = $1;
+
+-- name: DeleteAssessmentComponents :exec
+DELETE FROM assessment_components WHERE assessment_id = $1;
 
 -- name: BlacklistJWT :one
 INSERT INTO jwt_blacklist (jti, expires_at)
