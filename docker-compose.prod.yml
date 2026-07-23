@@ -1,0 +1,67 @@
+services:
+  postgres:
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dawai -d dawai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # no ports — internal only
+
+  api:
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    environment:
+      DATABASE_URL: postgres://dawai:${POSTGRES_PASSWORD:?required}@postgres:5432/dawai?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:?required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?required}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?required}
+      API_URL_INTERNAL: ${API_URL_INTERNAL:?required}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?required}
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
