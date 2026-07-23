@@ -7,7 +7,7 @@
 - [ ] Task 1.4: Set up middleware and auth service skeleton
 
 ## Phase 2: Frontend Setup (1 day)
-- [ ] Task 2.1: Initialize Next.js project with shadcn/ui
+- [x] Task 2.1: Initialize Next.js project with shadcn/ui
 - [ ] Task 2.2: Create auth store and API client
 
 ## Phase 3: Backend Features (3 days)
@@ -41,3 +41,4 @@
 ---
 Task 1.1: complete (commits df3f9fd..0f279c4, review clean)
 Task 1.2: complete (commit 47895e6, review clean)
+Task 2.1: complete (commit 2893f7d, Next.js 16, review clean)
