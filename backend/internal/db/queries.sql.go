@@ -379,6 +379,37 @@ func (q *Queries) GetAssessmentsByStudent(ctx context.Context, studentID pgtype.
 	return items, nil
 }
 
+const getRoleNamesByUserSchool = `-- name: GetRoleNamesByUserSchool :many
+SELECT r.name FROM roles r
+JOIN user_roles ur ON r.id = ur.role_id
+WHERE ur.user_id = $1 AND ur.school_id = $2
+`
+
+type GetRoleNamesByUserSchoolParams struct {
+	UserID   pgtype.UUID
+	SchoolID pgtype.UUID
+}
+
+func (q *Queries) GetRoleNamesByUserSchool(ctx context.Context, arg GetRoleNamesByUserSchoolParams) ([]string, error) {
+	rows, err := q.db.Query(ctx, getRoleNamesByUserSchool, arg.UserID, arg.SchoolID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		items = append(items, name)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRubricComponentByID = `-- name: GetRubricComponentByID :one
 SELECT id, school_id, subject_id, name, description, scale_min, scale_max, weight, created_at, updated_at FROM rubric_components WHERE id = $1
 `
@@ -588,6 +619,24 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	return i, err
 }
 
+const getUserBySchoolAndRole = `-- name: GetUserBySchoolAndRole :one
+SELECT COUNT(*) AS count
+FROM user_roles
+WHERE user_id = $1 AND school_id = $2
+`
+
+type GetUserBySchoolAndRoleParams struct {
+	UserID   pgtype.UUID
+	SchoolID pgtype.UUID
+}
+
+func (q *Queries) GetUserBySchoolAndRole(ctx context.Context, arg GetUserBySchoolAndRoleParams) (int64, error) {
+	row := q.db.QueryRow(ctx, getUserBySchoolAndRole, arg.UserID, arg.SchoolID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getUserRoles = `-- name: GetUserRoles :many
 SELECT role_id FROM user_roles WHERE user_id = $1
 `
@@ -636,6 +685,38 @@ func (q *Queries) GetUserSchools(ctx context.Context, userID pgtype.UUID) ([]pgt
 	return items, nil
 }
 
+const getUserSchoolsWithName = `-- name: GetUserSchoolsWithName :many
+SELECT s.id::text AS id, s.name
+FROM user_schools us
+JOIN schools s ON us.school_id = s.id
+WHERE us.user_id = $1
+`
+
+type GetUserSchoolsWithNameRow struct {
+	ID   string
+	Name string
+}
+
+func (q *Queries) GetUserSchoolsWithName(ctx context.Context, userID pgtype.UUID) ([]GetUserSchoolsWithNameRow, error) {
+	rows, err := q.db.Query(ctx, getUserSchoolsWithName, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserSchoolsWithNameRow
+	for rows.Next() {
+		var i GetUserSchoolsWithNameRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const isJWTBlacklisted = `-- name: IsJWTBlacklisted :one
 SELECT jti FROM jwt_blacklist WHERE jti = $1
 `
@@ -645,6 +726,100 @@ func (q *Queries) IsJWTBlacklisted(ctx context.Context, jti string) (string, err
 	var jti_2 string
 	err := row.Scan(&jti_2)
 	return jti_2, err
+}
+
+const listStudentsBySchool = `-- name: ListStudentsBySchool :many
+SELECT s.id, s.school_id, s.user_id, s.class, s.created_at, s.updated_at,
+       u.name AS user_name, u.email AS user_email
+FROM students s
+JOIN users u ON s.user_id = u.id
+WHERE s.school_id = $1
+ORDER BY u.name
+`
+
+type ListStudentsBySchoolRow struct {
+	ID        pgtype.UUID
+	SchoolID  pgtype.UUID
+	UserID    pgtype.UUID
+	Class     pgtype.Text
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+	UserName  string
+	UserEmail string
+}
+
+func (q *Queries) ListStudentsBySchool(ctx context.Context, schoolID pgtype.UUID) ([]ListStudentsBySchoolRow, error) {
+	rows, err := q.db.Query(ctx, listStudentsBySchool, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListStudentsBySchoolRow
+	for rows.Next() {
+		var i ListStudentsBySchoolRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.SchoolID,
+			&i.UserID,
+			&i.Class,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserName,
+			&i.UserEmail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsersBySchool = `-- name: ListUsersBySchool :many
+SELECT u.id, u.email, u.name, u.created_at, u.updated_at, r.name AS role_name
+FROM users u
+JOIN user_roles ur ON u.id = ur.user_id
+JOIN roles r ON ur.role_id = r.id
+WHERE ur.school_id = $1 AND u.deleted_at IS NULL
+ORDER BY u.name, r.name
+`
+
+type ListUsersBySchoolRow struct {
+	ID        pgtype.UUID
+	Email     string
+	Name      string
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+	RoleName  string
+}
+
+func (q *Queries) ListUsersBySchool(ctx context.Context, schoolID pgtype.UUID) ([]ListUsersBySchoolRow, error) {
+	rows, err := q.db.Query(ctx, listUsersBySchool, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUsersBySchoolRow
+	for rows.Next() {
+		var i ListUsersBySchoolRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Name,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.RoleName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateAssessment = `-- name: UpdateAssessment :exec
