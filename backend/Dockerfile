@@ -10,7 +10,7 @@ COPY . .
 RUN go build -o api ./cmd/api
 
 FROM alpine:latest
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates wget
 COPY --from=builder /migrate /usr/local/bin/
 COPY --from=builder /app/api /usr/local/bin/
 COPY --from=builder /app/migrations /migrations
