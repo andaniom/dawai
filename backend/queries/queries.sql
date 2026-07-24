@@ -124,3 +124,9 @@ VALUES ($1, $2) RETURNING *;
 
 -- name: IsJWTBlacklisted :one
 SELECT jti FROM jwt_blacklist WHERE jti = $1;
+
+-- name: GetStudentsByParent :many
+SELECT s.*
+FROM students s
+JOIN parent_students ps ON s.id = ps.student_id
+WHERE s.school_id = $1 AND ps.parent_id = $2;

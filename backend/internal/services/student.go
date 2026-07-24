@@ -63,6 +63,40 @@ func (s *StudentService) ListBySchool(ctx context.Context, schoolID string, clas
 	return out, nil
 }
 
+func (s *StudentService) ListByParent(ctx context.Context, schoolID, parentID string) ([]StudentResponse, error) {
+	schoolUUID := pgtype.UUID{}
+	if err := schoolUUID.Scan(schoolID); err != nil {
+		return nil, errors.New("invalid school_id")
+	}
+	parentUUID := pgtype.UUID{}
+	if err := parentUUID.Scan(parentID); err != nil {
+		return nil, errors.New("invalid parent_id")
+	}
+
+	rows, err := s.queries.GetStudentsByParent(ctx, db.GetStudentsByParentParams{
+		SchoolID: schoolUUID,
+		ParentID: parentUUID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]StudentResponse, 0, len(rows))
+	for _, r := range rows {
+		studentClass := ""
+		if r.Class.Valid {
+			studentClass = r.Class.String
+		}
+		out = append(out, StudentResponse{
+			ID:       uuidToString(r.ID),
+			SchoolID: uuidToString(r.SchoolID),
+			UserID:   uuidToString(r.UserID),
+			ClassName: studentClass,
+		})
+	}
+	return out, nil
+}
+
 func (s *StudentService) GetByID(ctx context.Context, schoolID, studentID string) (*StudentResponse, error) {
 	id := pgtype.UUID{}
 	if err := id.Scan(studentID); err != nil {
