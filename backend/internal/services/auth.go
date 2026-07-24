@@ -48,11 +48,11 @@ type LoginUser struct {
 
 func (s *AuthService) Login(ctx context.Context, email, password string) (*LoginResult, error) {
 	user, err := s.queries.GetUserByEmail(ctx, email)
-	if err != nil {
-		return nil, errors.New("invalid email or password")
-	}
 
-	if !user.PasswordHash.Valid {
+	// ALWAYS call bcrypt, even if user not found to mitigate timing attacks
+	if err != nil || !user.PasswordHash.Valid {
+		// Still waste time with dummy hash
+		bcrypt.CompareHashAndPassword([]byte("$2a$12$dummy.hash"), []byte(password))
 		return nil, errors.New("invalid email or password")
 	}
 

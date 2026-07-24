@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"github.com/violin-assessment/dawai/internal/db"
@@ -16,6 +17,9 @@ type CustomClaims struct {
 }
 
 func NewJWTGuard(queries *db.Queries) fiber.Handler {
+	secret := os.Getenv("JWT_SECRET")
+	secretBytes := []byte(secret)
+
 	return func(c *fiber.Ctx) error {
 	auth := c.Get("Authorization")
 	if auth == "" {
@@ -43,7 +47,10 @@ func NewJWTGuard(queries *db.Queries) fiber.Handler {
 	}
 
 	token, err := jwt.ParseWithClaims(parts[1], &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
+		if token.Method != jwt.SigningMethodHS256 {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretBytes, nil
 	})
 
 	if err != nil || !token.Valid {
@@ -58,21 +65,50 @@ func NewJWTGuard(queries *db.Queries) fiber.Handler {
 	}
 
 	claims := token.Claims.(*CustomClaims)
+
+	// Validate required claims: subject (user_id) must be present and non-empty
+	if claims.Subject == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"code":    401,
+			"error": fiber.Map{
+				"message": "Invalid token: missing or empty subject",
+				"type":    "auth_error",
+			},
+		})
+	}
+
+	// Validate required claims: school_id must be present and non-empty
+	if claims.SchoolID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"code":    401,
+			"error": fiber.Map{
+				"message": "Invalid token: missing or empty school_id",
+				"type":    "auth_error",
+			},
+		})
+	}
+
+	// Inject validated claims into context locals
 	c.Locals("user_id", claims.Subject)
 	c.Locals("school_id", claims.SchoolID)
 	c.Locals("roles", claims.Roles)
 	c.Locals("jti", claims.ID)
 
-	_, err = queries.IsJWTBlacklisted(c.Context(), claims.ID)
-	if err == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"success": false,
-			"code":    401,
-			"error": fiber.Map{
-				"message": "Token revoked",
-				"type":    "auth_error",
-			},
-		})
+	// Check if token is blacklisted (jti is required from token generation)
+	if claims.ID != "" {
+		blacklisted, err := queries.IsJWTBlacklisted(c.Context(), claims.ID)
+		if err == nil && blacklisted {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"success": false,
+				"code":    401,
+				"error": fiber.Map{
+					"message": "Token revoked",
+					"type":    "auth_error",
+				},
+			})
+		}
 	}
 
 	return c.Next()

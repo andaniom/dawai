@@ -56,7 +56,31 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
-	jti := c.Locals("jti").(string)
+	// Safe extraction of jti from context locals with type check
+	jtiVal := c.Locals("jti")
+	if jtiVal == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(models.Response{
+			Success: false,
+			Code:    401,
+			Error: &models.ErrorBody{
+				Message: "Invalid token: missing jti claim",
+				Type:    "auth_error",
+			},
+		})
+	}
+
+	jti, ok := jtiVal.(string)
+	if !ok || jti == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(models.Response{
+			Success: false,
+			Code:    401,
+			Error: &models.ErrorBody{
+				Message: "Invalid token: malformed jti claim",
+				Type:    "auth_error",
+			},
+		})
+	}
+
 	if err := h.authService.Logout(c.Context(), jti); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.Response{
 			Success: false,

@@ -13,6 +13,11 @@ import (
 )
 
 func main() {
+	// Validate critical env vars before initialization
+	if secret := os.Getenv("JWT_SECRET"); secret == "" {
+		panic("JWT_SECRET env var not set — tokens will forge trivially")
+	}
+
 	dbURL := os.Getenv("DATABASE_URL")
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
