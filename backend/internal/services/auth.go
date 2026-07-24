@@ -60,14 +60,21 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*Login
 		return nil, errors.New("invalid email or password")
 	}
 
-	// ponytail: hardcoded roles + school; wire user_roles + user_schools queries when seed data ready
-	rolesStr := []string{"teacher"}
-	schoolID := "00000000-0000-0000-0000-000000000000"
-
 	// Fetch first school from user_schools for login
+	schoolID := "00000000-0000-0000-0000-000000000000"
 	schools, err := s.queries.GetUserSchools(ctx, user.ID)
-	if err == nil && len(schools) > 0 {
-		schoolID = schools[0].String()
+	if err != nil || len(schools) == 0 {
+		return nil, errors.New("user has no school membership")
+	}
+	schoolID = schools[0].String()
+
+	// Fetch actual roles from user_roles table
+	rolesStr, err := s.queries.GetRoleNamesByUserSchool(ctx, db.GetRoleNamesByUserSchoolParams{
+		UserID:   user.ID,
+		SchoolID: schools[0],
+	})
+	if err != nil {
+		rolesStr = []string{}
 	}
 
 	token, err := s.GenerateToken(ctx, user.ID.String(), schoolID, rolesStr)
@@ -88,6 +95,14 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*Login
 }
 
 func (s *AuthService) GenerateToken(ctx context.Context, userID, schoolID string, roles []string) (string, error) {
+	// Validate required claims before token generation
+	if userID == "" {
+		return "", errors.New("cannot generate token: missing or empty userID")
+	}
+	if schoolID == "" {
+		return "", errors.New("cannot generate token: missing or empty schoolID")
+	}
+
 	jti := uuid.New().String()
 	now := time.Now()
 
