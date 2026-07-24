@@ -1,78 +1,91 @@
 # Phase 14 Deployment Checklist
 
-**Date:** 2026-07-24  
-**Status:** 🔄 In Progress
-
 ## Environment Variables
 
-- [x] POSTGRES_PASSWORD in .env
-- [x] JWT_SECRET in .env (32+ chars)
-- [x] AUTH_SECRET in .env (32+ chars)
-- [x] NEXTAUTH_URL in .env
-- [x] NEXT_PUBLIC_API_URL in .env
-- [ ] MINIO vars configured
-- [ ] Google OAuth vars configured (optional)
+| Var | Required | Status | Notes |
+|---|---|---|---|
+| `POSTGRES_PASSWORD` | ✅ | ✅ PASS | Present in .env |
+| `JWT_SECRET` | ✅ | ✅ PASS | Present in .env (32+ chars) |
+| `AUTH_SECRET` | ✅ | ✅ PASS | Present in .env (32+ chars) |
+| `NEXTAUTH_URL` | ✅ | ❌ FAIL | Missing from .env — required for NextAuth |
+| `NEXT_PUBLIC_API_URL` | ✅ | ❌ FAIL | Missing from .env — required for frontend to reach API |
+| `POSTGRES_USER` | ✅ | ⚠️  PARTIAL | Not in .env; hardcoded in docker-compose.yml as `dawai` |
+| `POSTGRES_DB` | ✅ | ⚠️  PARTIAL | Not in .env; hardcoded in docker-compose.yml as `dawai` |
+| `API_URL_INTERNAL` | ✅ | ✅ PASS | In docker-compose, defaults to `http://api:8080` |
 
-## Dockerfiles
+**Action:** Add missing vars to .env:
+```bash
+NEXTAUTH_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:8080
+```
 
-- [x] backend/Dockerfile uses go install for migrate (arch-agnostic)
-- [x] backend/Dockerfile multi-stage build
-- [x] frontend/Dockerfile node 20-alpine
-- [x] frontend/Dockerfile npm build + npm start
-- [ ] All Dockerfiles pass `docker compose build` without errors
+---
 
-## Docker Compose
+## Docker Build Tests
 
-- [x] postgres service configured
-- [x] api service configured + depends_on postgres
-- [x] web service configured + depends_on api
-- [ ] minio service configured (optional)
-- [x] All env vars passed correctly via `environment:`
-- [x] Volumes mounted for migrations
+| Service | Build | Status | Notes |
+|---|---|---|---|
+| Backend (api) | `docker compose build api` | ✅ PASS | Multi-stage, golang:1.25-alpine → alpine |
+| Frontend (web) | `docker compose build web` | ✅ PASS | Build succeeds; non-critical Next.js metadata warnings |
 
-## Services Health
+---
 
-- [x] API responds: `curl http://localhost:8080/api/health` → 401 (auth required, OK)
-- [x] Frontend responds: `curl http://localhost:3000` → 200
-- [x] Both containers running in docker compose
-- [ ] All services pass smoke test
+## Service Connectivity
 
-## Woodpecker CI/CD
+| Endpoint | Expected | Actual | Status |
+|---|---|---|---|
+| `http://localhost:8080/api/health` | 401 Unauthorized (auth required) | Auth error (expected) | ✅ PASS |
+| `http://localhost:3000` | 200 + login page | 200 + default template | ❌ FAIL |
 
-- [x] .woodpecker.yml defines test-backend step
-- [x] .woodpecker.yml defines deploy-backend step
-- [x] .woodpecker.yml defines deploy-frontend step
-- [x] deploy-backend uses `docker compose up -d --build --no-deps api`
-- [x] deploy-frontend uses `docker compose up -d --build --no-deps web`
-- [x] Secret references: db_password, jwt_secret, auth_secret, smtp_pass, etc.
-- [ ] Secrets correctly injected in Woodpecker settings
+**Bug:** frontend/app/page.tsx is still default Create Next App template, not DAWAI login page.
 
-## Integration
+---
 
-- [ ] Frontend can reach API at NEXT_PUBLIC_API_URL
-- [ ] JWT auth flow works end-to-end
-- [ ] NextAuth session/JWT integrated
-- [ ] Database migrations run on startup
+## Docker Compose Status
 
-## Issues Found & Fixed
+| Service | Container | Status |
+|---|---|---|
+| PostgreSQL | Running | ✅ Port 127.0.0.1:5432 |
+| API (Go) | Running | ✅ Port 127.0.0.1:8080 |
+| Frontend (Next.js) | Running | ✅ Port 127.0.0.1:3000 |
 
-### Blocker #1: Dockerfile migrate binary arch mismatch
-- **Issue:** `curl | tar xvz` downloaded wrong architecture
-- **Fix:** Changed to `go install github.com/golang-migrate/migrate/v4/cmd/migrate@v4.17.0`
-- **Status:** ✓ Fixed, API builds successfully
+✅ All services running.
 
-### Blocker #2: docker-compose.yml missing web service
-- **Issue:** frontend not in docker-compose, only api+postgres
-- **Fix:** Added web service with proper env vars + depends_on api
-- **Status:** ✓ Fixed, both api + web running
+---
 
-### Blocker #3: AUTH_SECRET missing in .env
-- **Issue:** docker-compose env interpolation failed on AUTH_SECRET
-- **Fix:** Added AUTH_SECRET to .env
-- **Status:** ✓ Fixed
+## Dockerfile Validation
 
-## Final Status
+### Backend ✅ PASS
+- Multi-stage build (golang:1.25-alpine → alpine)
+- Installs golang-migrate in builder
+- Runs migrations before starting API
 
-**Deployment ready:** Pending teammate verification  
-**Next:** Lighthouse audit, E2E tests, offline validation
+### Frontend ⚠️ PARTIAL
+- Build succeeds but `NEXT_PUBLIC_API_URL` should be build arg, not runtime env
+- Update docker-compose.yml to pass as build args
 
+---
+
+## CI/CD Pipeline (`.woodpecker.yml`)
+
+| Step | Status | Issue |
+|---|---|---|
+| test-backend | ✅ PASS | - |
+| deploy-backend | ✅ PASS | - |
+| deploy-frontend | ⚠️ PARTIAL | Env vars passed at runtime, not build time |
+| test-frontend | ❌ MISSING | No tests |
+
+---
+
+## Critical Issues
+
+| ID | Issue | Fix |
+|---|---|---|
+| ENV-001 | Missing NEXTAUTH_URL | Add to .env |
+| ENV-002 | Missing NEXT_PUBLIC_API_URL | Add to .env |
+| FE-001 | Root page is default template | Redirect to /login |
+| DOCKER-001 | No build args for frontend | Add args: section in docker-compose.yml |
+
+---
+
+Generated: 2026-07-24

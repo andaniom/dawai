@@ -50,14 +50,10 @@ steps:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      JWT_SECRET:
-        from_secret: jwt_secret
-      GOOGLE_CLIENT_SECRET:
-        from_secret: google_client_secret
       NEXT_PUBLIC_API_URL:
         from_secret: next_public_api_url
-      AUTH_URL:
-        from_secret: auth_url
+      NEXTAUTH_URL:
+        from_secret: nextauth_url
       AUTH_SECRET:
         from_secret: auth_secret
     commands:
