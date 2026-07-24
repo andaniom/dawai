@@ -3,6 +3,7 @@ package middleware
 import (
 	"os"
 	"strings"
+	"github.com/violin-assessment/dawai/internal/db"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gofiber/fiber/v2"
@@ -14,7 +15,8 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func JWTGuard(c *fiber.Ctx) error {
+func NewJWTGuard(queries *db.Queries) fiber.Handler {
+	return func(c *fiber.Ctx) error {
 	auth := c.Get("Authorization")
 	if auth == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -61,5 +63,18 @@ func JWTGuard(c *fiber.Ctx) error {
 	c.Locals("roles", claims.Roles)
 	c.Locals("jti", claims.ID)
 
+	_, err = queries.IsJWTBlacklisted(c.Context(), claims.ID)
+	if err == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"code":    401,
+			"error": fiber.Map{
+				"message": "Token revoked",
+				"type":    "auth_error",
+			},
+		})
+	}
+
 	return c.Next()
+	}
 }

@@ -38,16 +38,16 @@ func main() {
 	app := fiber.New()
 
 	// Public routes
-	app.Post("/api/auth/login", authHandler.Login)
+	app.Post("/api/auth/login", middleware.RateLimiter(), authHandler.Login)
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
 
 	// Protected routes
-	authGroup := app.Group("/api/auth", middleware.JWTGuard)
+	authGroup := app.Group("/api/auth", middleware.NewJWTGuard(queries))
 	authGroup.Post("/logout", authHandler.Logout)
 
-	api := app.Group("/api", middleware.JWTGuard, middleware.TenantGuard)
+	api := app.Group("/api", middleware.NewJWTGuard(queries), middleware.TenantGuard)
 
 	// /api/me — current user
 	api.Get("/me", userHandler.GetMe)
