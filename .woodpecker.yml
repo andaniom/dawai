@@ -64,6 +64,20 @@ steps:
       path:
         include: [ 'frontend/**' ]
 
+  audit-pwa:
+    image: node:20-alpine
+    environment:
+      CI: "true"
+    commands:
+      - npm install -g lighthouse
+      - sleep 5
+      - lighthouse http://web:3000 --output=json --output-path=lighthouse-report --chrome-flags="--headless --no-sandbox"
+      - cat lighthouse-report.json | jq '.categories.pwa.score * 100'
+    when:
+      branch: main
+      path:
+        include: [ 'frontend/**' ]
+
   # -------------------------------------------------------
   # NOTIFICATIONS
   # -------------------------------------------------------
