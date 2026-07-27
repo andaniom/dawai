@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import apiClient from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface QueuedAssessmentResult {
   queued: boolean;
@@ -14,6 +15,7 @@ export interface QueuedAssessmentResult {
 export function useOfflineQueue() {
   const [pending, setPending] = useState(0);
   const [syncing, setSyncing] = useState(false);
+  const queryClient = useQueryClient();
 
   // On mount, count pending assessments
   useEffect(() => {
@@ -135,7 +137,13 @@ export function useOfflineQueue() {
     // Update pending count
     const remaining = await db.pending_assessments.where('synced').equals(0).count();
     setPending(remaining);
-  }, []);
+
+    // Invalidate queries so lists refresh after background sync
+    if (synced_count > 0) {
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["my-assessments"] });
+    }
+  }, [queryClient]);
 
   return { queueAssessment, pending, syncing, syncPendingAssessments };
 }

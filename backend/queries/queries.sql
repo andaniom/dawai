@@ -54,6 +54,9 @@ SELECT * FROM students WHERE school_id = $1 ORDER BY created_at;
 -- name: GetStudentByID :one
 SELECT * FROM students WHERE id = $1;
 
+-- name: GetStudentByUserID :one
+SELECT * FROM students WHERE user_id = $1 AND school_id = $2;
+
 -- name: CreateAssessment :one
 INSERT INTO assessments (school_id, subject_id, student_id, teacher_id, feedback)
 VALUES ($1, $2, $3, $4, $5) RETURNING *;

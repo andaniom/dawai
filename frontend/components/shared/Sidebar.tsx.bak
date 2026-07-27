@@ -28,12 +28,6 @@ export function Sidebar() {
         {user?.roles.includes("school_admin") && (
           <>
             <Link
-              href="/dashboard/reports"
-              className="block p-2 hover:bg-accent rounded"
-            >
-              Reports
-            </Link>
-            <Link
               href="/dashboard/subjects"
               className="block p-2 hover:bg-accent rounded"
             >

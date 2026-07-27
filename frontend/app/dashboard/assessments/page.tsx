@@ -14,6 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AssessmentModal } from "@/components/assessment/AssessmentModal";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "@/lib/db";
+import { Clock } from "lucide-react";
 
 export default function AssessmentsPage() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
@@ -32,6 +35,10 @@ export default function AssessmentsPage() {
 
   const subjects: Subject[] = subjectsData?.data?.data ?? [];
   const students: Student[] = studentsData?.data?.data ?? [];
+
+  const pendingAssessments = useLiveQuery(
+    () => db.pending_assessments.where("synced").equals(0).toArray()
+  );
 
   return (
     <div className="space-y-6">
@@ -92,6 +99,46 @@ export default function AssessmentsPage() {
             )}
           </TableBody>
         </Table>
+      )}
+
+      {pendingAssessments && pendingAssessments.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-amber-500" />
+            Pending Assessments
+          </h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pendingAssessments.map((p) => {
+                const studentName = students.find((s) => s.id === p.student_id)?.name ?? "Unknown";
+                const subjectName = subjects.find((s) => s.id === p.song_id)?.name ?? "Unknown";
+                return (
+                  <TableRow key={p.idempotency_key}>
+                    <TableCell>{studentName}</TableCell>
+                    <TableCell>{subjectName}</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                        Pending sync
+                      </span>
+                      {p.sync_error && (
+                        <span className="ml-2 text-xs text-destructive">
+                          {p.sync_error}
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       {selectedStudent && selectedSubject && (

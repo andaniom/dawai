@@ -16,10 +16,24 @@ func NewStudentHandler(svc *services.StudentService) *StudentHandler {
 
 // ListStudents godoc
 // GET /api/students — list students by school, optional ?class filter.
+// Students can only see their own record.
 func (h *StudentHandler) ListStudents(c *fiber.Ctx) error {
 	schoolID := c.Locals("school_id").(string)
-	classFilter := c.Query("class")
+	userID := c.Locals("user_id").(string)
+	roles := c.Locals("roles").([]string)
 
+	// Student: scope to own record only
+	for _, r := range roles {
+		if r == "student" {
+			student, err := h.svc.GetByUserID(c.Context(), schoolID, userID)
+			if err != nil {
+				return c.JSON(models.Response{Success: true, Code: 200, Data: []interface{}{}})
+			}
+			return c.JSON(models.Response{Success: true, Code: 200, Data: []interface{}{student}})
+		}
+	}
+
+	classFilter := c.Query("class")
 	students, err := h.svc.ListBySchool(c.Context(), schoolID, classFilter)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.Response{

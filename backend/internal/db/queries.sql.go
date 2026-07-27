@@ -501,6 +501,29 @@ func (q *Queries) GetStudentByID(ctx context.Context, id pgtype.UUID) (Student, 
 	return i, err
 }
 
+const getStudentByUserID = `-- name: GetStudentByUserID :one
+SELECT id, school_id, user_id, class, created_at, updated_at FROM students WHERE user_id = $1 AND school_id = $2
+`
+
+type GetStudentByUserIDParams struct {
+	UserID   pgtype.UUID
+	SchoolID pgtype.UUID
+}
+
+func (q *Queries) GetStudentByUserID(ctx context.Context, arg GetStudentByUserIDParams) (Student, error) {
+	row := q.db.QueryRow(ctx, getStudentByUserID, arg.UserID, arg.SchoolID)
+	var i Student
+	err := row.Scan(
+		&i.ID,
+		&i.SchoolID,
+		&i.UserID,
+		&i.Class,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getStudentsByParent = `-- name: GetStudentsByParent :many
 SELECT s.id, s.school_id, s.user_id, s.class, s.created_at, s.updated_at
 FROM students s

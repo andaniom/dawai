@@ -57,7 +57,7 @@ steps:
       AUTH_SECRET:
         from_secret: auth_secret
     commands:
-      - docker compose up -d --build --no-deps web
+      - docker compose up -d --build --no-deps frontend
       - docker image prune -f
     when:
       branch: main

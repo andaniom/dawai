@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ReactQueryProvider } from "@/lib/providers";
+import { OfflineStatus } from "@/components/shared/OfflineStatus";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -25,7 +26,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ReactQueryProvider>
+          {children}
+          <OfflineStatus />
+        </ReactQueryProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

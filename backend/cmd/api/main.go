@@ -88,7 +88,7 @@ func main() {
 
 	// Assessments
 	assessmentsGroup := api.Group("/assessments")
-	assessmentsGroup.Post("", assessmentHandler.Create)
+	assessmentsGroup.Post("", middleware.RoleGuard("teacher"), assessmentHandler.Create)
 	assessmentsGroup.Get("", assessmentHandler.List)
 	assessmentsGroup.Get("/:id", assessmentHandler.GetByID)
 	assessmentsGroup.Patch("/:id", assessmentHandler.Update)

@@ -132,6 +132,40 @@ func (s *StudentService) GetByID(ctx context.Context, schoolID, studentID string
 	}, nil
 }
 
+func (s *StudentService) GetByUserID(ctx context.Context, schoolID, userID string) (*StudentResponse, error) {
+	uid := pgtype.UUID{}
+	if err := uid.Scan(userID); err != nil {
+		return nil, errors.New("invalid user_id")
+	}
+	sid := pgtype.UUID{}
+	if err := sid.Scan(schoolID); err != nil {
+		return nil, errors.New("invalid school_id")
+	}
+
+	row, err := s.queries.GetStudentByUserID(ctx, db.GetStudentByUserIDParams{UserID: uid, SchoolID: sid})
+	if err != nil {
+		return nil, errors.New("student not found")
+	}
+
+	rowUser, err := s.queries.GetUserByID(ctx, row.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	className := ""
+	if row.Class.Valid {
+		className = row.Class.String
+	}
+	return &StudentResponse{
+		ID:        uuidToString(row.ID),
+		SchoolID:  uuidToString(row.SchoolID),
+		UserID:    uuidToString(row.UserID),
+		ClassName: className,
+		UserName:  rowUser.Name,
+		UserEmail: rowUser.Email,
+	}, nil
+}
+
 func (s *StudentService) Create(ctx context.Context, schoolID string, input CreateStudentInput) (*StudentResponse, error) {
 	schoolUUID := pgtype.UUID{}
 	if err := schoolUUID.Scan(schoolID); err != nil {
