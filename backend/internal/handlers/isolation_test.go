@@ -75,21 +75,21 @@ func (m *MockAssessmentService) Update(ctx interface{}, schoolID, id string, req
 
 func TestCrossTenant_UserCannotReadEntityFromOtherSchool(t *testing.T) {
 	skipIfNoDB(t)
-    // skipped: Real DB wiring. Add when `test_helpers.go` with DB seeding is merged.
+	// skipped: Real DB wiring. Add when `test_helpers.go` with DB seeding is merged.
 }
 
 func TestCrossTenant_UserCannotWriteEntityFromOtherSchool(t *testing.T) {
-    skipIfNoDB(t)
+	skipIfNoDB(t)
 }
 
 func TestCrossTenant_SchoolIDNotFromRequest(t *testing.T) {
-    skipIfNoDB(t)
+	skipIfNoDB(t)
 }
 
 func TestCrossTenant_SuperAdminCanImpersonateViaHeader(t *testing.T) {
-    skipIfNoDB(t)
+	skipIfNoDB(t)
 }
 
 func TestCrossTenant_NonSuperAdminHeaderIgnored(t *testing.T) {
-    skipIfNoDB(t)
+	skipIfNoDB(t)
 }

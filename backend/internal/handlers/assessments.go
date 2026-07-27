@@ -15,10 +15,10 @@ func NewAssessmentHandler(service *services.AssessmentService) *AssessmentHandle
 }
 
 type CreateAssessmentRequest struct {
-	StudentID string                 `json:"student_id"`
-	SubjectID string                 `json:"subject_id"`
-	Scores    []services.ScoreInput  `json:"scores"`
-	Feedback  string                 `json:"feedback"`
+	StudentID string                `json:"student_id"`
+	SubjectID string                `json:"subject_id"`
+	Scores    []services.ScoreInput `json:"scores"`
+	Feedback  string                `json:"feedback"`
 }
 
 type UpdateAssessmentRequest struct {

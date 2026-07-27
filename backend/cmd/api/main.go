@@ -72,11 +72,11 @@ func main() {
 	usersGroup.Post("", userHandler.CreateUser)
 	usersGroup.Get("", userHandler.ListUsers)
 
-	// Students
+	// Students (school_admin: create; teacher+admin: read)
 	studentsGroup := api.Group("/students")
 	studentsGroup.Get("", studentHandler.ListStudents)
 	studentsGroup.Get("/:id", studentHandler.GetStudent)
-	studentsGroup.Post("", studentHandler.CreateStudent)
+	studentsGroup.Post("", middleware.RoleGuard("school_admin"), studentHandler.CreateStudent)
 
 	// Subjects
 	subjectsGroup := api.Group("/subjects")

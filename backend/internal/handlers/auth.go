@@ -1,16 +1,24 @@
 package handlers
 
 import (
+	"context"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/violin-assessment/dawai/internal/models"
 	"github.com/violin-assessment/dawai/internal/services"
 )
 
-type AuthHandler struct {
-	authService *services.AuthService
+// AuthServicer interface for dependency injection testing
+type AuthServicer interface {
+	Login(ctx context.Context, email, password string) (*services.LoginResult, error)
+	Logout(ctx context.Context, jti string) error
 }
 
-func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+type AuthHandler struct {
+	authService AuthServicer
+}
+
+func NewAuthHandler(authService AuthServicer) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 

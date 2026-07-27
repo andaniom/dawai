@@ -1,21 +1,27 @@
 package handlers
 
 import (
+	"context"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/violin-assessment/dawai/internal/services"
 )
 
 type mockAuthServiceForLogout struct{}
 
-func (m *mockAuthServiceForLogout) Logout(ctx interface{}, jti string) error {
+func (m *mockAuthServiceForLogout) Login(ctx context.Context, email, password string) (*services.LoginResult, error) {
+	return nil, nil // Not used in logout tests
+}
+
+func (m *mockAuthServiceForLogout) Logout(ctx context.Context, jti string) error {
 	return nil // Success mock
 }
 
 func TestLogoutWithValidJTI(t *testing.T) {
 	app := fiber.New()
-	handler := &AuthHandler{}
+	handler := NewAuthHandler(&mockAuthServiceForLogout{})
 
 	app.Get("/logout", func(c *fiber.Ctx) error {
 		// Simulate middleware injection of valid jti
@@ -34,7 +40,7 @@ func TestLogoutWithValidJTI(t *testing.T) {
 
 func TestLogoutWithMissingJTI(t *testing.T) {
 	app := fiber.New()
-	handler := &AuthHandler{}
+	handler := NewAuthHandler(&mockAuthServiceForLogout{})
 
 	app.Get("/logout", func(c *fiber.Ctx) error {
 		// Simulate middleware NOT injecting jti (should not panic)
@@ -52,7 +58,7 @@ func TestLogoutWithMissingJTI(t *testing.T) {
 
 func TestLogoutWithWrongJTIType(t *testing.T) {
 	app := fiber.New()
-	handler := &AuthHandler{}
+	handler := NewAuthHandler(&mockAuthServiceForLogout{})
 
 	app.Get("/logout", func(c *fiber.Ctx) error {
 		// Simulate middleware injecting wrong type (should not panic)
