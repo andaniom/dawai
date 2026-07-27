@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,6 +25,15 @@ func main() {
 		panic(err)
 	}
 	defer pool.Close()
+
+	// Start JWT blacklist cleanup routine
+	go func() {
+		ticker := time.NewTicker(1 * time.Hour)
+		defer ticker.Stop()
+		for range ticker.C {
+			_, _ = pool.Exec(context.Background(), "DELETE FROM jwt_blacklist WHERE expires_at < NOW()")
+		}
+	}()
 
 	queries := db.New(pool)
 

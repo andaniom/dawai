@@ -29,8 +29,8 @@ type ScoreInput struct {
 }
 
 type AssessmentWithComponents struct {
-	Assessment db.Assessment              `json:"assessment"`
-	Components []db.AssessmentComponent   `json:"components"`
+	Assessment db.Assessment            `json:"assessment"`
+	Components []db.AssessmentComponent `json:"components"`
 }
 
 type AssessmentFilter struct {

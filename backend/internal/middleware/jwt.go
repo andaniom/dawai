@@ -98,8 +98,8 @@ func NewJWTGuard(queries *db.Queries) fiber.Handler {
 
 	// Check if token is blacklisted (jti is required from token generation)
 	if claims.ID != "" {
-		blacklisted, err := queries.IsJWTBlacklisted(c.Context(), claims.ID)
-		if err == nil && blacklisted {
+		_, err := queries.IsJWTBlacklisted(c.Context(), claims.ID)
+		if err == nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"success": false,
 				"code":    401,

@@ -1,0 +1,4 @@
+-- jwt_blacklist unbounded growth fix
+-- Managed in Go code (main.go goroutine), no schema changes required.
+-- 
+-- Query: DELETE FROM jwt_blacklist WHERE expires_at < NOW();

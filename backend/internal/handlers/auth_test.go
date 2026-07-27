@@ -1,11 +1,10 @@
 package handlers
 
 import (
-	"net/httptest"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/violin-assessment/dawai/internal/services"
 )
 
 type mockAuthServiceForLogout struct{}

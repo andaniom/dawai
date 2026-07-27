@@ -1,0 +1,1 @@
+-- Down migration empty for Go background job

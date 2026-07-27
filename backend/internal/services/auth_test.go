@@ -2,12 +2,12 @@ package services
 
 import (
 	"errors"
-	"os"
-	"strings"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/violin-assessment/dawai/internal/db"
+	"os"
+	"strings"
 )
 
 import (
@@ -119,6 +119,7 @@ type MockRows struct {
 	values [][]any
 	idx    int
 }
+
 func (m *MockRows) Next() bool { m.idx++; return m.idx <= len(m.values) }
 func (m *MockRows) Scan(dest ...any) error {
 	for i, val := range m.values[m.idx-1] {
@@ -131,13 +132,13 @@ func (m *MockRows) Scan(dest ...any) error {
 	}
 	return nil
 }
-func (m *MockRows) Close() {}
-func (m *MockRows) Err() error { return nil }
-func (m *MockRows) CommandTag() pgconn.CommandTag { return pgconn.CommandTag{} }
+func (m *MockRows) Close()                                       {}
+func (m *MockRows) Err() error                                   { return nil }
+func (m *MockRows) CommandTag() pgconn.CommandTag                { return pgconn.CommandTag{} }
 func (m *MockRows) FieldDescriptions() []pgconn.FieldDescription { return nil }
-func (m *MockRows) Values() ([]any, error) { return nil, nil }
-func (m *MockRows) RawValues() [][]byte { return nil }
-func (m *MockRows) Conn() *pgx.Conn { return nil }
+func (m *MockRows) Values() ([]any, error)                       { return nil, nil }
+func (m *MockRows) RawValues() [][]byte                          { return nil }
+func (m *MockRows) Conn() *pgx.Conn                              { return nil }
 
 func setupLoginMockDB(user db.User, schools []pgtype.UUID, roles []string, userByEmailErr error) *db.Queries {
 	mockDB := &MockDBTX{
@@ -197,7 +198,7 @@ func TestLogin_ValidCredentials(t *testing.T) {
 	authService := NewAuthService(mockQueries)
 
 	result, err := authService.Login(ctx, "valid@example.com", "password123")
-	
+
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -233,7 +234,7 @@ func TestLogin_InvalidPassword(t *testing.T) {
 	authService := NewAuthService(mockQueries)
 
 	_, err := authService.Login(ctx, "invalidpass@example.com", "wrongpassword")
-	
+
 	if err == nil {
 		t.Fatalf("Expected error for invalid password, got nil")
 	}
@@ -250,7 +251,7 @@ func TestLogin_UserNotFound(t *testing.T) {
 	authService := NewAuthService(mockQueries)
 
 	_, err := authService.Login(ctx, "notfound@example.com", "password123")
-	
+
 	if err == nil {
 		t.Fatalf("Expected error for user not found, got nil")
 	}
@@ -280,12 +281,12 @@ func TestLogin_MultiSchoolUser(t *testing.T) {
 	}
 
 	schools := []pgtype.UUID{parsePgUUID(schoolID1), parsePgUUID(schoolID2)}
-	
+
 	mockQueries := setupLoginMockDB(user, schools, []string{"teacher"}, nil)
 	authService := NewAuthService(mockQueries)
 
 	result, err := authService.Login(ctx, "multi@example.com", "password123")
-	
+
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -310,7 +311,7 @@ func TestLogin_NoSchoolMembership(t *testing.T) {
 	authService := NewAuthService(mockQueries)
 
 	_, err := authService.Login(ctx, "noschool@example.com", "password123")
-	
+
 	if err == nil {
 		t.Fatalf("Expected error for no school membership, got nil")
 	}

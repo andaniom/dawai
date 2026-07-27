@@ -52,9 +52,9 @@ func (s *StudentService) ListBySchool(ctx context.Context, schoolID string, clas
 			continue
 		}
 		out = append(out, StudentResponse{
-			ID:       uuidToString(r.ID),
-			SchoolID: uuidToString(r.SchoolID),
-			UserID:   uuidToString(r.UserID),
+			ID:        uuidToString(r.ID),
+			SchoolID:  uuidToString(r.SchoolID),
+			UserID:    uuidToString(r.UserID),
 			ClassName: studentClass,
 			UserName:  r.UserName,
 			UserEmail: r.UserEmail,
@@ -88,9 +88,9 @@ func (s *StudentService) ListByParent(ctx context.Context, schoolID, parentID st
 			studentClass = r.Class.String
 		}
 		out = append(out, StudentResponse{
-			ID:       uuidToString(r.ID),
-			SchoolID: uuidToString(r.SchoolID),
-			UserID:   uuidToString(r.UserID),
+			ID:        uuidToString(r.ID),
+			SchoolID:  uuidToString(r.SchoolID),
+			UserID:    uuidToString(r.UserID),
 			ClassName: studentClass,
 		})
 	}

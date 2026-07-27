@@ -153,11 +153,11 @@ func (s *AuthService) CreateUser(ctx context.Context, email, password, name stri
 }
 
 type UserWithRoles struct {
-	ID        string   `json:"id"`
-	Email     string   `json:"email"`
-	Name      string   `json:"name"`
-	Roles     []string `json:"roles"`
-	Schools   []SchoolInfo `json:"schools"`
+	ID      string       `json:"id"`
+	Email   string       `json:"email"`
+	Name    string       `json:"name"`
+	Roles   []string     `json:"roles"`
+	Schools []SchoolInfo `json:"schools"`
 }
 
 type SchoolInfo struct {
