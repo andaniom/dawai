@@ -6,6 +6,7 @@ export interface PendingAssessment {
   student_id: string;
   song_id: string;
   scores: Record<string, number>; // {component_id: score}
+  feedback?: string;
   created_at: number; // timestamp
   synced: boolean;
   sync_error?: string;

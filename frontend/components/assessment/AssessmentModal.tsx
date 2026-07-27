@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useOfflineQueue } from "@/hooks";
 
 interface AssessmentModalProps {
   open: boolean;
@@ -27,6 +28,7 @@ export function AssessmentModal({
   subjectName,
 }: AssessmentModalProps) {
   const queryClient = useQueryClient();
+  const { queueAssessment, pending, syncing } = useOfflineQueue();
 
   const { data: rubricData } = useQuery({
     queryKey: ["rubric", subjectId],
@@ -38,14 +40,24 @@ export function AssessmentModal({
   const rubric: RubricComponent[] = rubricData?.data?.data ?? [];
 
   const createMutation = useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       student_id: string;
       subject_id: string;
       scores: { rubric_component_id: string; score: number }[];
       feedback: string;
-    }) => apiClient.post("/api/assessments", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assessments"] });
+    }) => {
+      const result = await queueAssessment(data);
+      if (!result.queued) {
+        // Online: return as normal
+        return result;
+      }
+      // Offline: queued for sync
+      return result;
+    },
+    onSuccess: (result) => {
+      if (!result.queued) {
+        queryClient.invalidateQueries({ queryKey: ["assessments"] });
+      }
       onOpenChange(false);
     },
   });
@@ -96,9 +108,18 @@ export function AssessmentModal({
             <Label htmlFor="feedback">Feedback (optional)</Label>
             <Textarea id="feedback" name="feedback" placeholder="Notes for the student..." />
           </div>
-          <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-            {createMutation.isPending ? "Submitting..." : "Submit Assessment"}
+          <Button type="submit" className="w-full" disabled={createMutation.isPending || syncing}>
+            {createMutation.isPending
+              ? "Submitting..."
+              : syncing
+                ? "Syncing offline..."
+                : "Submit Assessment"}
           </Button>
+          {pending > 0 && (
+            <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded">
+              {pending} assessment{pending !== 1 ? "s" : ""} queued offline. Will sync when online.
+            </p>
+          )}
           {createMutation.isError && (
             <p className="text-sm text-destructive">
               {(createMutation.error as any)?.response?.data?.error?.message || "Failed to submit assessment"}
