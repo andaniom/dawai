@@ -246,30 +246,24 @@ docker-compose logs minio
 ### Frontend can't reach API
 ```bash
 # Verify API_URL_INTERNAL in frontend container
-docker-compose logs web
+docker-compose logs frontend
 
 # Should be http://api:8080 (internal Docker network)
 ```
 
 ## Roadmap
 
-### Phase 1-4: Completed ✅
+### Phase 1-14: Completed ✅
 - Database migrations
 - Auth endpoints
 - Frontend scaffold
-
-### Phase 5-8: In Progress 🟡
 - Super admin dashboard
 - School admin curriculum
 - Student management
-- Assessment core (highest priority)
-
-### Phase 9-11: Pending
+- Assessment core
 - Offline sync
 - Reporting & KurMer
 - Portal (student/parent)
-
-### Phase 12-14: Final
 - Audit logging
 - Security hardening
 - PWA & deployment
@@ -284,7 +278,6 @@ For issues, questions, or PRD clarifications:
 
 ---
 
-**Status:** Phase 4 scaffolding complete  
-**Next Focus:** Assessment core (Phase 8) — scoring math & mobile panel  
+**Status:** Complete  
 **Built with:** Go, Next.js, PostgreSQL, Tailwind  
 **License:** Private
